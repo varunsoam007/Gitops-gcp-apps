@@ -41,7 +41,7 @@ spec:
 #=============================================================================
 # Ignore mutating changes injected by GKE and standard webhooks
 #=============================================================================
-      Ignore mutating changes not in the helm charts
+# Ignore mutating changes not in the helm charts
 #================================================
       ignoreDifferences:
       # chart: istio-base
