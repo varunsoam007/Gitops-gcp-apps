@@ -51,6 +51,10 @@ spec:
         image: postgres:16
         imagePullPolicy: IfNotPresent
 
+        args:
+          - -c
+          - max_connections=300
+
         ports:
         - name: postgres
           containerPort: 5432
