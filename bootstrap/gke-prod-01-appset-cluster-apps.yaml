@@ -1,0 +1,188 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gke-prod-01-cluster-baseline
+  namespace: argo-cd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/varunsoam007/Gitops-gcp-apps.git
+      revision: HEAD
+      directories:
+      - path: apps/*/envs/gke-prod-01
+  template:
+    metadata:
+      # This generates a name like 'gke-prod-01-external-secrets'
+      name: '{{index .path.segments 3}}-{{index .path.segments 1}}'
+    spec:
+      project: default
+
+      source:
+        repoURL: https://github.com/varunsoam007/Gitops-gcp-apps.git
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        # The namespace is dynamically extracted from the app folder name (e.g., 'external-secrets')
+        namespace: '{{index .path.segments 1}}'
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+        automated:
+          prune: true
+          selfHeal: true
+      
+      revisionHistoryLimit: 2
+
+#=============================================================================
+# Ignore mutating changes injected by GKE and standard webhooks
+#=============================================================================
+      Ignore mutating changes not in the helm charts
+#================================================
+      ignoreDifferences:
+      # chart: istio-base
+      # - failurePolicy (flips between Ignore ↔ Fail until CA is patched)
+      # - namespaceSelector (sometimes added dynamically)
+      # - caBundle (always injected by Istio controller)
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: istiod-default-validator
+        jsonPointers:
+        - /webhooks/0/failurePolicy
+        - /webhooks/0/namespaceSelector
+        - /webhooks/0/clientConfig/caBundle
+      # chart: kiali-server - ignore dynamic checksum annotation
+      - group: apps
+        jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1config
+        kind: Deployment
+        name: kiali
+        namespace: istio-system
+
+      # chart: cert-manager
+      # - namespaceSelector (AKS adds control-plane and kubernetes.azure.com/managedby)
+      # - objectSelector (added by cert-manager, sometimes empty {} vs omitted)      
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: cert-manager-webhook
+        jsonPointers:
+        - /webhooks/0/namespaceSelector
+        - /webhooks/0/objectSelector
+
+      # chart: istiod
+      # - namespaceSelector (AKS adds control-plane and kubernetes.azure.com/managedby)
+      # - objectSelector (added by cert-manager, sometimes empty {} vs omitted)  
+      # - failurePolicy (flips between Ignore ↔ Fail until CA is patched)
+      - group: admissionregistration.k8s.io
+        kind: MutatingWebhookConfiguration
+        name: istio-sidecar-injector
+        jsonPointers:
+        - /webhooks/0/namespaceSelector/matchExpressions
+        - /webhooks/0/objectSelector/matchExpressions
+        - /webhooks/1/namespaceSelector/matchExpressions
+        - /webhooks/1/objectSelector/matchExpressions
+        - /webhooks/2/namespaceSelector/matchExpressions
+        - /webhooks/2/objectSelector/matchExpressions
+        - /webhooks/3/namespaceSelector/matchExpressions
+        - /webhooks/3/objectSelector/matchExpressions
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: istio-validator-istio-system
+        jsonPointers:
+        - /webhooks/0/failurePolicy
+
+      # chart: cloudnative-pg
+      # - caBundle (injected by cert-manager via annotation)
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: cnpg-validating-webhook-configuration
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+        - /webhooks/1/clientConfig/caBundle
+        - /webhooks/2/clientConfig/caBundle
+        - /webhooks/3/clientConfig/caBundle
+        - /webhooks/4/clientConfig/caBundle
+      - group: admissionregistration.k8s.io
+        kind: MutatingWebhookConfiguration
+        name: cnpg-mutating-webhook-configuration
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+        - /webhooks/1/clientConfig/caBundle
+        - /webhooks/2/clientConfig/caBundle
+        - /webhooks/3/clientConfig/caBundle
+
+      # chart: external-secrets
+      # - caBundle (injected by cert-manager via annotation)
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: secretstore-validate
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+        - /webhooks/1/clientConfig/caBundle
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: externalsecret-validate
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+
+      # chart: kargo
+      # - caBundle (injected by cert-manager via annotation)
+      - group: admissionregistration.k8s.io
+        kind: MutatingWebhookConfiguration
+        name: kargo
+        jqPathExpressions:
+        - '.webhooks[]?.clientConfig.service.port'
+        - '.webhooks[]?.namespaceSelector'
+        - '.webhooks[]?.objectSelector'
+        - '.webhooks[]?.matchPolicy'
+        - '.webhooks[]?.reinvocationPolicy'
+        - '.webhooks[]?.timeoutSeconds'
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+        - /webhooks/1/clientConfig/caBundle
+        - /webhooks/2/clientConfig/caBundle
+        - /webhooks/3/clientConfig/caBundle
+      - group: admissionregistration.k8s.io
+        kind: ValidatingWebhookConfiguration
+        name: kargo
+        jqPathExpressions:
+        - '.webhooks[]?.clientConfig.service.port'
+        - '.webhooks[]?.namespaceSelector'
+        - '.webhooks[]?.objectSelector'
+        - '.webhooks[]?.matchPolicy'
+        - '.webhooks[]?.timeoutSeconds'
+        jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+        - /webhooks/1/clientConfig/caBundle
+        - /webhooks/2/clientConfig/caBundle
+        - /webhooks/3/clientConfig/caBundle
+        - /webhooks/4/clientConfig/caBundle
+        - /webhooks/5/clientConfig/caBundle
+        - /webhooks/6/clientConfig/caBundle
+        - /webhooks/7/clientConfig/caBundle
+        - /webhooks/8/clientConfig/caBundle
+        - /webhooks/9/clientConfig/caBundle
+        - /webhooks/10/clientConfig/caBundle
+
+      # chart: kiali-server - ignore dynamic checksum annotation
+      - group: apps
+        jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1config
+        kind: Deployment
+        name: kiali
+        namespace: istio-system
+
+      # chart: testkube (nats)
+      # - volumeClaimTemplates: Kubernetes auto-populates apiVersion, kind, and status
+      #   on PVC templates; these are not present in the Helm chart manifests
+      - group: apps
+        kind: StatefulSet
+        name: testkube-nats
+        namespace: testkube
+        jqPathExpressions:
+        - .spec.volumeClaimTemplates[]?.apiVersion
+        - .spec.volumeClaimTemplates[]?.kind
