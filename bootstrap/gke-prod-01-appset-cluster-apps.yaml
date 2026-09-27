@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: gke-prod-01-cluster-baseline
+  name: gke-prod-01-cluster-apps
   namespace: argo-cd
 spec:
   goTemplate: true
