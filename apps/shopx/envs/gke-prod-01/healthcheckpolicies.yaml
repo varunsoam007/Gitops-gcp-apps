@@ -1,0 +1,143 @@
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: auth-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: auth
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: product-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: product
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: shop-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: shop
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: order-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: order
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: inventory-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: inventory
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: payment-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: payment
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: review-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: review
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: notification-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: notification
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: user-healthcheck
+  namespace: shopx
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: user
+  default:
+    config:
+      type: TCP
+      tcpHealthCheck:
+        portSpecification: USE_SERVING_PORT

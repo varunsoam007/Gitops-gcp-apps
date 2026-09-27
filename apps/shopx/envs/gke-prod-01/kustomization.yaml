@@ -5,6 +5,7 @@ resources:
   - ../../base
   - gateway.yaml
   - httproutes.yaml
+  - healthcheckpolicies.yaml
 
 images:
   - name: varunsoam/shopx-auth
