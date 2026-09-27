@@ -10,6 +10,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -33,6 +34,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -56,6 +58,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -79,6 +82,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -102,6 +106,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -125,6 +130,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -148,6 +154,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -171,6 +178,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -194,6 +202,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:
@@ -217,6 +226,7 @@ spec:
     - name: shared-gateway-int
       namespace: gateway-api
   hostnames:
+    - "shop.jksoam.in"
     - "shopx.jksoam.in"
   rules:
     - matches:

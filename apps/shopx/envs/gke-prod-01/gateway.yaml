@@ -4,7 +4,10 @@ metadata:
   name: shopx-gateway
   namespace: shopx
 spec:
-  gatewayClassName: istio
+  gatewayClassName: gke-l7-global-external-managed
+  addresses:
+    - type: NamedAddress
+      value: jksoa-ingress-ip
   listeners:
     - name: http
       port: 80
