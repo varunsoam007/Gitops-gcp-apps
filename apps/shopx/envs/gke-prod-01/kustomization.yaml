@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - gateway.yaml
+  - httproutes.yaml
+
+images:
+  - name: varunsoam/shopx-auth
+    newTag: "396"
+  - name: varunsoam/shopx-frontend
+    newTag: "417"
+  - name: varunsoam/shopx-inventory
+    newTag: "398"
+  - name: varunsoam/shopx-notification
+    newTag: "405"
+  - name: varunsoam/shopx-order
+    newTag: "413"
+  - name: varunsoam/shopx-payment
+    newTag: "399"
+  - name: varunsoam/shopx-product
+    newTag: "397"
+  - name: varunsoam/shopx-review
+    newTag: "400"
+  - name: varunsoam/shopx-shop
+    newTag: "414"
+  - name: varunsoam/shopx-user
+    newTag: "402"

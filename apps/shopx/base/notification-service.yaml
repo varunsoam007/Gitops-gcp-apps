@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notification-db-secret
+  namespace: shopx
+type: Opaque
+stringData:
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_NAME: authdb
+  DB_USER: authuser
+  DB_PASSWORD: StrongPassword@123
+  WHATSAPP_META_PHONE_NUMBER_ID: "1259692280550111"
+  WHATSAPP_META_TOKEN: "EAAYDEGABli0BR8FCgwl8bEj6FymK6mGcPcp44e3pyLVjN51988yZCYs4GMWHLEExa311xZBUyXaT2cqrciq1x6g4OEzUHhvrHcSgGfCZBJh5cnaNCIsnkYJ54KztZC7ZAZCYr2dEOH2eb6DnPMjIDO07iNl6LRVPiXQ54XQ2BENtWTFkWMvJnFcBZB9X5Bujyv25F01SJjnCvwRACV7LZBSj30ZBRHZAHSKbRlI6McSmKyKzcI0tJS1vrHC2eWDip1AuRxHMZAydJatOxRedqlyLBgyWnMZD"
+  WHATSAPP_META_VERIFY_TOKEN: "shopx_webhook_token_2026"
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification
+  namespace: shopx
+  labels:
+    app: notification
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification
+  template:
+    metadata:
+      labels:
+        app: notification
+      annotations:
+        sidecar.istio.io/proxyCPU: "10m"
+        sidecar.istio.io/proxyCPULimit: "200m"
+        sidecar.istio.io/proxyMemory: "64Mi"
+        sidecar.istio.io/proxyMemoryLimit: "256Mi"
+    spec:
+      containers:
+      - name: notification
+        image: varunsoam/shopx-notification:405
+        imagePullPolicy: Always
+
+        ports:
+        - name: http
+          containerPort: 8088
+
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: DB_HOST
+
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: DB_PORT
+
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: DB_NAME
+
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: DB_USER
+
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: DB_PASSWORD
+
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)
+
+        - name: SPRING_DATASOURCE_USERNAME
+          value: $(DB_USER)
+
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: $(DB_PASSWORD)
+
+        - name: WHATSAPP_META_PHONE_NUMBER_ID
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: WHATSAPP_META_PHONE_NUMBER_ID
+
+        - name: WHATSAPP_META_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: WHATSAPP_META_TOKEN
+
+        - name: WHATSAPP_META_VERIFY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: notification-db-secret
+              key: WHATSAPP_META_VERIFY_TOKEN
+
+        - name: USER_SERVICE_URL
+          value: http://user:8089
+
+        - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+          value: update
+
+        # ---- OpenTelemetry Configuration ----
+        - name: OTEL_SERVICE_NAME
+          value: "notification-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
+        - name: OTEL_LOGS_EXPORTER
+          value: "otlp"
+        - name: OTEL_TRACES_EXPORTER
+          value: "otlp"
+        - name: OTEL_METRICS_EXPORTER
+          value: "none"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.namespace=shopx,deployment.environment=testing"
+
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          tcpSocket:
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 5
+
+        livenessProbe:
+          tcpSocket:
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification
+  namespace: shopx
+  labels:
+    app: notification
+spec:
+  type: ClusterIP
+  selector:
+    app: notification
+  ports:
+    - name: http
+      port: 8088
+      targetPort: http

@@ -1,0 +1,228 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: frontend-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend
+          port: 80
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: auth-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/auth
+      backendRefs:
+        - name: auth
+          port: 8081
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: shop-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/shops
+      backendRefs:
+        - name: shop
+          port: 8082
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: product-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/products
+      backendRefs:
+        - name: product
+          port: 8083
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: inventory-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/inventories
+      backendRefs:
+        - name: inventory
+          port: 8084
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: order-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/orders
+      backendRefs:
+        - name: order
+          port: 8085
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: payment-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/payments
+      backendRefs:
+        - name: payment
+          port: 8087
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: notification-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/notifications
+      backendRefs:
+        - name: notification
+          port: 8088
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: review-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/reviews
+      backendRefs:
+        - name: review
+          port: 8086
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: user-route
+  namespace: shopx
+spec:
+  parentRefs:
+    - name: shopx-gateway
+      namespace: shopx
+    - name: shared-gateway-int
+      namespace: gateway-api
+  hostnames:
+    - "shopx.jksoam.in"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/users
+      backendRefs:
+        - name: user
+          port: 8089

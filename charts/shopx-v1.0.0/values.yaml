@@ -1,0 +1,15 @@
+# Default values for shopx helm chart
+common_defaults:
+  labels: {}
+  annotations: {}
+
+deployment_defaults:
+  autoscaling:
+    enabled: false
+  imagePullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+service_defaults: {}

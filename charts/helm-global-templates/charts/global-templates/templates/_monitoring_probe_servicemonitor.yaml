@@ -1,0 +1,69 @@
+{{/*
+Render a blackbox probe ServiceMonitor from monitoring.probe values.
+This centralizes defaults that were previously duplicated in app-level charts.
+*/}}
+{{- define "global-templates.monitoringProbeServiceMonitor" -}}
+{{- $globalValues := .Values.global -}}
+{{- $commonDefaults := .Values.common_defaults -}}
+{{- $probe := .Values.monitoring.probe | default dict -}}
+{{- if $probe.enabled }}
+{{- $name := $probe.name | default (printf "%s-health-check" .Chart.Name) -}}
+{{- $namespace := $probe.namespace | default .Chart.Name -}}
+{{- $target := $probe.target | default "" -}}
+{{- $environmentLabel := $probe.environmentLabel | default "" -}}
+{{- if not $target }}
+{{- fail "monitoring.probe.target is required when monitoring.probe.enabled=true" }}
+{{- end }}
+{{- if not $environmentLabel }}
+{{- fail "monitoring.probe.environmentLabel is required when monitoring.probe.enabled=true" }}
+{{- end }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $name }}
+  namespace: {{ include "helpers.prefixNamespace" (dict "namespace" $namespace "global" $globalValues) }}
+  labels: {{ include "helpers.labels" (dict "context" $ "customLabels" (dict "app" ($probe.serviceLabel | default .Chart.Name)) "defaultLabels" $commonDefaults.labels) | nindent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      {{- if $probe.namespaceSelector.matchNames }}
+      {{- toYaml $probe.namespaceSelector.matchNames | nindent 6 }}
+      {{- else }}
+      - blackbox-exporter
+      - monitoring
+      {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $probe.selector.name | default "prometheus-blackbox-exporter" | quote }}
+      {{- if $probe.selector.instance }}
+      app.kubernetes.io/instance: {{ $probe.selector.instance | quote }}
+      {{- end }}
+  endpoints:
+    - port: {{ $probe.port | default "http" | quote }}
+      interval: {{ $probe.interval | default "20s" | quote }}
+      scrapeTimeout: {{ $probe.scrapeTimeout | default "10s" | quote }}
+      path: {{ $probe.path | default "/probe" | quote }}
+      params:
+        target:
+          - {{ $target | quote }}
+        module:
+          - {{ $probe.module | default "http_2xx" | quote }}
+      relabelings:
+        - sourceLabels: [__param_target]
+          targetLabel: instance
+        - sourceLabels: [__param_target]
+          targetLabel: target
+        - replacement: {{ $probe.job | default (printf "%s-health-check" .Chart.Name) | quote }}
+          targetLabel: job
+        - replacement: {{ $probe.serviceLabel | default .Chart.Name | quote }}
+          targetLabel: service
+        - replacement: {{ $environmentLabel | quote }}
+          targetLabel: environment
+        - replacement: {{ $probe.endpointLabel | default "health-check" | quote }}
+          targetLabel: endpoint
+        - action: replace
+          replacement: {{ $probe.blackboxAddress | default "blackbox-exporter.blackbox-exporter.svc.cluster.local:9115" | quote }}
+          targetLabel: __address__
+{{- end }}
+{{- end }}

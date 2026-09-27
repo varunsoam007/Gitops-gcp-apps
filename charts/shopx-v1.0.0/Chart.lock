@@ -1,0 +1,6 @@
+dependencies:
+- name: global-templates
+  repository: oci://registry-1.docker.io/varunsoam
+  version: 1.16.1
+digest: sha256:c7d9139ba8168fbd4e052f7bdc2ebe8a6423afda4a5aaf897f2561dedb69ed1c
+generated: "2026-09-27T18:29:58.6793536+05:30"

@@ -1,0 +1,420 @@
+suite: Test deployment template
+templates:
+  - template.yaml
+  
+tests:
+  - it: should create basic deployment correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: kind
+          value: Deployment
+      - equal:
+          path: apiVersion
+          value: apps/v1
+      - equal:
+          path: metadata.name
+          value: api
+      - equal:
+          path: metadata.namespace
+          value: test-namespace
+      - equal:
+          path: metadata.labels.app
+          value: api
+
+  - it: should set annotations correctly
+    values:
+      - deployment_values.yaml
+    set:
+      deployments.api.annotations:
+        test-annotation: test-value
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: test-value
+  
+  - it: should set reloader annotation correctly
+    values:
+      - deployment_values.yaml
+    set:
+      deployments.api.reloaderEnabled: true
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+
+  - it: should configure containers correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: api-container
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: docker.io/busybox:1.0.0
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: should set init containers correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init-db
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: docker.io/busybox:1.0.0
+      - equal:
+          path: spec.template.spec.initContainers[0].command[0]
+          value: /bin/sh
+      - equal:
+          path: spec.template.spec.initContainers[0].envFrom[0].configMapRef.name
+          value: init-db-config
+      - equal:
+          path: spec.template.spec.initContainers[0].envFrom[1].secretRef.name
+          value: init-db-secret
+      - equal:
+          path: spec.template.spec.initContainers[0].envFrom[2].configMapRef.name
+          value: init-db-config-rendered
+
+  - it: should set volumes and mounts correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: app-config
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /config
+
+  - it: should set projected volumes correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: projected-volume
+      - equal:
+          path: spec.template.spec.volumes[1].projected.sources[0].secret.name
+          value: mysecret
+      - equal:
+          path: spec.template.spec.volumes[1].projected.sources[0].secret.items[0].key
+          value: username
+      - equal:
+          path: spec.template.spec.volumes[1].projected.sources[0].secret.items[0].path
+          value: my-group/my-username
+
+  - it: should set affinity rules correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: kubernetes.io/e2e-az-name
+
+  - it: should set security context correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+  
+  - it: should render global values correctly to container name
+    values:
+      - deployment_values.yaml
+    set:
+      global.global-var: rendered
+      deployments.api.containers.api-container.name: "api-container-{{ global.global-var }}"
+    
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: api-container-rendered
+
+  - it: should render global values correctly to env vars
+    values:
+      - deployment_values.yaml
+    set:
+      global:
+        global-var: rendered
+
+      deployments.api.containers.api-container.env:
+        - name: GLOBAL_VAR
+          value: I love {{ global.global-var }} values!
+        - name: GLOBAL_VAR2
+          value: I love {{global.global-var}} values!
+        - name: GLOBAL_VAR3
+          value: I love {{global.not-exists}} values!
+        - name: GLOBAL_VAR3
+          value: I love {{ global.not-exists }} values!
+    asserts:
+      - equal:
+          path: "spec.template.spec.containers[0].env[0].value"
+          value: I love rendered values!
+      - equal:
+          path: "spec.template.spec.containers[0].env[1].value"
+          value: I love rendered values!
+      - equal:
+          path: "spec.template.spec.containers[0].env[2].value"
+          value: I love {{global.not-exists}} values!
+      - equal:
+          path: "spec.template.spec.containers[0].env[3].value"
+          value: I love {{ global.not-exists }} values! 
+
+  - it: should set envFrom correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].configMapRef.name
+          value: app-config
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].secretRef.name
+          value: app-secret
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[2].configMapRef.name
+          value: app-config-rendered
+
+  - it: should set valueFrom correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: key
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.configMapKeyRef.name
+          value: app-config
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.configMapKeyRef.key
+          value: keyRef
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: key2
+      - equal:
+          path: spec.template.spec.containers[0].env[2].valueFrom.secretKeyRef.name
+          value: app-secret
+      - equal:
+          path: spec.template.spec.containers[0].env[2].valueFrom.secretKeyRef.key
+          value: key2Ref
+
+  - it: should not render deployment if disabled
+    values:
+      - deployment_values.yaml
+    set:
+      deployments.api.disabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set imagePullSecrets correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-secret
+
+  - it: should set livenessProbe correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+
+  - it: should set readinessProbe correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /ready
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 5
+
+  - it: should set secret volume with items correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: secret-volume
+      - equal:
+          path: spec.template.spec.volumes[2].secret.secretName
+          value: my-secret
+      - equal:
+          path: spec.template.spec.volumes[2].secret.items[0].key
+          value: config.yml
+      - equal:
+          path: spec.template.spec.volumes[2].secret.items[0].path
+          value: config.yml
+      - equal:
+          path: spec.template.spec.volumes[2].secret.items[1].key
+          value: data.json
+      - equal:
+          path: spec.template.spec.volumes[2].secret.items[1].path
+          value: data.json
+      - equal:
+          path: spec.template.spec.volumes[2].secret.items[2].key
+          value: no-path-key
+      - notExists:
+          path: spec.template.spec.volumes[2].secret.items[2].path
+
+  - it: should set secret volume without items correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[3].name
+          value: secret-volume-no-items
+      - equal:
+          path: spec.template.spec.volumes[3].secret.secretName
+          value: my-secret-no-items
+      - notExists:
+          path: spec.template.spec.volumes[3].secret.items
+
+  - it: should render global values correctly to image pull policy
+    values:
+      - deployment_values.yaml
+    set:
+      global.imagePullPolicy: Never
+      deployments.api.containers.api-container.imagePullPolicy: "{{ global.imagePullPolicy }}"
+      deployments.api.initContainers.init-db.imagePullPolicy: "{{ global.imagePullPolicy }}"
+    
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Never
+      - equal:
+          path: spec.template.spec.initContainers[0].imagePullPolicy
+          value: Never
+
+  - it: should render global values correctly in volumeMounts for containers
+    values:
+      - deployment_values.yaml
+    set:
+      global:
+        volume-prefix: global-vol
+        mount-base: /global/mount
+        sub-path: global-config
+      deployments.api.containers.api-container.volumeMounts:
+        config-volume:
+          name: "{{ global.volume-prefix }}-config"
+          mountPath: "{{ global.mount-base }}/config"
+          subPath: "{{ global.sub-path }}/app.conf"
+    
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: global-vol-config
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /global/mount/config
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].subPath
+          value: global-config/app.conf
+
+  - it: should render global values correctly in volumeMounts for initContainers
+    values:
+      - deployment_values.yaml
+    set:
+      global:
+        init-volume: init-vol
+        init-mount: /init/mount
+        init-subpath: init-config
+      deployments.api.initContainers.init-db.volumeMounts:
+        - name: "{{ global.init-volume }}-data"
+          mountPath: "{{ global.init-mount }}/data"
+          subPath: "{{ global.init-subpath }}/init.conf"
+    
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].name
+          value: init-vol-data
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].mountPath
+          value: /init/mount/data
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[0].subPath
+          value: init-config/init.conf
+
+  - it: should allow replicas to be set to 0
+    values:
+      - deployment_values.yaml
+    set:
+      deployments.api.replicas: 0
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 0
+
+  - it: should set hostAliases correctly
+    values:
+      - deployment_values.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.hostAliases[0].ip
+          value: "127.0.0.1"
+      - equal:
+          path: spec.template.spec.hostAliases[0].hostnames[0]
+          value: "localhost"
+      - equal:
+          path: spec.template.spec.hostAliases[0].hostnames[1]
+          value: "api.local"
+
+  - it: should render global values in hostAliases correctly
+    values:
+      - deployment_values.yaml
+    set:
+      global:
+        db-ip: "192.168.1.100"
+        db-hostname: "database.example.com"
+        domain: "example.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.hostAliases[1].ip
+          value: "192.168.1.100"
+      - equal:
+          path: spec.template.spec.hostAliases[1].hostnames[0]
+          value: "database.example.com"
+      - equal:
+          path: spec.template.spec.hostAliases[1].hostnames[1]
+          value: "database.example.com"
+
+  - it: should not render hostAliases if not specified
+    values:
+      - deployment_values.yaml
+    set:
+      deployments.api.hostAliases: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.hostAliases

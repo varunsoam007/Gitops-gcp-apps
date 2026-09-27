@@ -1,0 +1,2 @@
+{{/* Aggregate resources from global-templates library using full chart context */}}
+{{- include "global-templates.all" . }}

@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - waypoint.yaml
+  - postgres.yaml
+  - auth-service.yaml
+  - shop-service.yaml
+  - product-service.yaml
+  - inventory-service.yaml
+  - order-service.yaml
+  - payment-service.yaml
+  - notification-service.yaml
+  - review-service.yaml
+  - user-service.yaml
+  - frontend-service.yaml

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shopx
+  labels:
+    app.kubernetes.io/name: shopx
+    # Istio Ambient Mesh enrollment (sidecar-less L4 ztunnel)
+    istio.io/dataplane-mode: ambient
+    # Istio Ambient Mesh L7 waypoint routing
+    istio.io/use-waypoint: waypoint
+    # Allow traffic from shared gateways
+    allow-shared-gateway-int-access: "true"
+    allow-shared-gateway-ext-access: "true"

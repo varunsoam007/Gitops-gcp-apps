@@ -1,0 +1,10 @@
+apiVersion: v2
+name: shopx
+version: 1.0.0
+type: application
+description: LocalShopX Helm chart using global-templates
+
+dependencies:
+  - name: global-templates
+    version: "1.16.1"
+    repository: "oci://registry-1.docker.io/varunsoam"
